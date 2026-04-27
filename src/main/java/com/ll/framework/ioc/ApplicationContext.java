@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -75,12 +76,7 @@ public class ApplicationContext {
 
     private Object[] resolverArgs(Method method) {
         try{
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            Object[] args = new Object[parameterTypes.length];
-
-            for(int i = 0; i<args.length; i++){
-                args[i] = getBeanByType(parameterTypes[i]);
-            }
+            Object[] args = resolverParamsArgs(method.getParameterTypes());
             return args;
         }catch (Exception e){
             throw new RuntimeException("Failed to create : "+ method.getName(),e);
@@ -107,16 +103,20 @@ public class ApplicationContext {
     private Object createInstance(Class<?> clazz) {
         try{
             Constructor<?> constructor = clazz.getDeclaredConstructors()[0];
-            Class<?>[] parameterTypes = constructor.getParameterTypes();
-            Object[] args = new Object[parameterTypes.length];
-
-            for(int i = 0; i<args.length; i++){
-                args[i] = getBeanByType(parameterTypes[i]);
-            }
+            Object[] args = resolverParamsArgs(constructor.getParameterTypes());
             return constructor.newInstance(args);
         }catch (Exception e){
             throw new RuntimeException("Failed to create : "+ clazz.getName(),e);
         }
+    }
+
+    private Object[] resolverParamsArgs(Class<?>[] paramsTypes) {
+        Object[] args = new Object[paramsTypes.length];
+
+        for(int i = 0; i<args.length; i++){
+            args[i] = getBeanByType(paramsTypes[i]);
+        }
+        return args;
     }
 
     private Object getBeanByType(Class<?> parameterType) {
